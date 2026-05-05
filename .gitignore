@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Editor scratch
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local test fixtures (when added)
+tmp/
+*.local
+
+# Downloaded `ov` binary cache from local action testing
+ov
+ov.minisig

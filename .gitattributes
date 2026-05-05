@@ -1,0 +1,10 @@
+# Lock line endings to LF for shell + YAML + signature-bearing files.
+# trusted-keys.txt parsing assumes LF-only; a CRLF entry would silently
+# fail the per-line read loop in entrypoint.sh. .gitattributes pins the
+# format on every checkout regardless of platform.
+
+* text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+trusted-keys.txt text eol=lf
