@@ -1,0 +1,17 @@
+# CODEOWNERS for opaquev/ov-scan-action
+#
+# Pattern semantics: GitHub uses LAST-MATCHING-PATTERN-WINS, so the
+# catch-all `*` line MUST stay at the TOP of this file. Specific path
+# rules go AFTER the catch-all so they override it.
+#
+# This file is intentionally empty (no owner rules) for PR #1 (bootstrap).
+# Code-owner review enforcement is enabled on `main` AFTER this PR merges
+# so that subsequent PRs (starting with PR #2 which populates real owners)
+# are subject to the rule.
+#
+# Solo CODEOWNER staffing for v1: @huntrock17. The 2-of-N defense
+# normally provided by multiple human reviewers is delegated to the
+# per-PR canonical AI-reviewer loop:
+#   pre-review (3-lens) → implementer → spec/code/post-review →
+#   CI green → Devin → senior SWE → merge.
+# A follow-up ticket will add human co-reviewers when the team grows.
