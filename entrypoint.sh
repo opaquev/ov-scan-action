@@ -296,7 +296,7 @@ if [ -z "$INPUT_PATH" ]; then
     echo "::error::required input 'path' is empty - refusing to scan repo root by default" >&2
     exit 2
 fi
-INPUT_BASELINE_FILE="${INPUT_BASELINE_FILE:-.ovscan-baseline.txt}"
+INPUT_BASELINE_FILE="${INPUT_BASELINE_FILE:-}"   # empty = skip --baseline (smoke caught the broken default 2026-05-06)
 INPUT_FAIL_ON="${INPUT_FAIL_ON:-high}"
 INPUT_MIN_OV_VERSION="${INPUT_MIN_OV_VERSION:-}"
 INPUT_MAX_OV_VERSION="${INPUT_MAX_OV_VERSION:-}"
@@ -305,7 +305,7 @@ if ! [[ "$INPUT_PATH" =~ ^[A-Za-z0-9._/-]+$ ]]; then
     echo "::error::invalid path input" >&2
     exit 2
 fi
-if ! [[ "$INPUT_BASELINE_FILE" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+if [ -n "$INPUT_BASELINE_FILE" ] && ! [[ "$INPUT_BASELINE_FILE" =~ ^[A-Za-z0-9._/-]+$ ]]; then
     echo "::error::invalid baseline-file input" >&2
     exit 2
 fi
@@ -338,14 +338,17 @@ reject_traversal() {
     done
 }
 reject_traversal "$INPUT_PATH" path
-reject_traversal "$INPUT_BASELINE_FILE" baseline-file
 if [[ "$INPUT_PATH" == /* ]]; then
     echo "::error::path may not be absolute" >&2
     exit 2
 fi
-if [[ "$INPUT_BASELINE_FILE" == /* ]]; then
-    echo "::error::baseline-file may not be absolute" >&2
-    exit 2
+# baseline-file traversal/absolute checks only apply when it's set (empty = skip --baseline).
+if [ -n "$INPUT_BASELINE_FILE" ]; then
+    reject_traversal "$INPUT_BASELINE_FILE" baseline-file
+    if [[ "$INPUT_BASELINE_FILE" == /* ]]; then
+        echo "::error::baseline-file may not be absolute" >&2
+        exit 2
+    fi
 fi
 
 INPUT_TIME_BUDGET="${INPUT_TIME_BUDGET:-300}"
@@ -622,6 +625,14 @@ if [ "$TEST_MODE" = "true" ]; then
     fi
 fi
 
+# Conditional --baseline flag: only pass when customer set the input.
+# Empty default would otherwise tell ov scan "open file '' as baseline"
+# which fails on first-time integration. Smoke caught this 2026-05-06.
+BASELINE_ARGS=()
+if [ -n "$INPUT_BASELINE_FILE" ]; then
+    BASELINE_ARGS=(--baseline "$INPUT_BASELINE_FILE")
+fi
+
 set +e
 (
     ulimit -v "$MEM_KB" 2>/dev/null || true  # macOS no-op silently
@@ -636,7 +647,7 @@ set +e
         OV_INPUT_FAIL_ON="$INPUT_FAIL_ON" \
         ${TEST_FORWARD[@]+"${TEST_FORWARD[@]}"} \
         "${OV_TIMEOUT[@]}" "$WALL_S" "$OV_BIN" scan "$INPUT_PATH" \
-            --baseline "$INPUT_BASELINE_FILE" \
+            ${BASELINE_ARGS[@]+"${BASELINE_ARGS[@]}"} \
             --fail-on "$INPUT_FAIL_ON" \
             --format json > "$SCAN_OUT"
 )

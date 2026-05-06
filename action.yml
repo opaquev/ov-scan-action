@@ -10,9 +10,9 @@ inputs:
     required: false
     default: .
   baseline-file:
-    description: Path to baseline file with HMAC-fingerprinted accepted findings
+    description: Path to baseline file with HMAC-fingerprinted accepted findings. Empty (default) skips baseline; the action passes --baseline only if explicitly set.
     required: false
-    default: .ovscan-baseline.txt
+    default: ''
   fail-on:
     description: 'Severity threshold: verified|critical|high|medium|low|info'
     required: false
