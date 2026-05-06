@@ -1,8 +1,12 @@
 # `opaquev/ov-scan-action`
 
+[![smoke](https://github.com/opaquev/ov-scan-action-integration-test/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/opaquev/ov-scan-action-integration-test/actions/workflows/smoke.yml)
+
 GitHub Action that runs [`ov scan`](https://opaquevault.com/docs/scan) on your repository to find leaked secrets in the working tree and (optionally) in git history.
 
-> **Status: v1 (release candidate).** Implementation lives at this repo; security model + 6-round pre-review history is documented under [`docs/threat-model.md`](docs/threat-model.md) and the upstream OV-239 plan doc.
+> **Status: v1.0.0 shipped.** Implementation lives in this repo; security model + 6-round pre-review history is documented under [`docs/threat-model.md`](docs/threat-model.md) and the upstream OV-239 plan doc.
+
+> **Health**: the badge above is the live status of the [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test) smoke suite — runs daily against the published `@v1` tag AND the immutable `v1.0.0` SHA pin on `ubuntu-latest`, `ubuntu-24.04-arm`, and `macos-latest`. **If that badge is red, do not integrate this action until smoke is green again.**
 
 ## Why a separate action?
 
@@ -36,7 +40,7 @@ For the `<40-char-sha>` pin value, copy the latest commit SHA from the [opaquev/
 | Input | Default | Description |
 |---|---|---|
 | `path` | `.` | Path to scan (relative to repo root). Allowlist regex; no `..` segments, no absolute paths. |
-| `baseline-file` | `.ovscan-baseline.txt` | Path to baseline file with HMAC-fingerprinted accepted findings. |
+| `baseline-file` | `''` | Path to baseline file with HMAC-fingerprinted accepted findings. Empty = no baseline (the default for first-time integration). |
 | `fail-on` | `high` | Severity threshold: `verified\|critical\|high\|medium\|low\|info`. |
 | `min-ov-version` | `''` | Minimum ov binary version (e.g., `v0.10.0`). Customer floor; cannot loosen the action's embedded `OV_VERSION` floor. |
 | `max-ov-version` | `''` | Maximum ov binary version. |

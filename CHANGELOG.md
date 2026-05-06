@@ -5,7 +5,25 @@ All notable changes to `opaquev/ov-scan-action` will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v1.0.0] — Unreleased
+## [v1.0.1] — Unreleased
+
+### Fixed
+- **First-time integration UX**: `baseline-file` default changed from
+  `.ovscan-baseline.txt` to empty string. Previously, customers
+  dropping the action into a repo that had no baseline file got an
+  error from `ov scan`: `loading baseline: open .ovscan-baseline.txt:
+  no such file or directory`. The action now passes `--baseline` to
+  `ov scan` only when the customer explicitly sets the input.
+  Caught by [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test)
+  smoke on its very first run after v1.0.0 shipped — exactly the
+  failure mode that test was designed to catch.
+
+### Added
+- Health badge on the README pointing at the smoke-test repo. **If
+  the badge is red, the action is broken — do not integrate it
+  until smoke is green.**
+
+## [v1.0.0] — 2026-05-06
 
 The first stable release of `ov-scan-action`. After 6 rounds of
 pre-implementation security review (35+ findings patched before any
