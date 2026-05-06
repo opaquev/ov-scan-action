@@ -217,9 +217,11 @@ BASH
     # Mock returns a redacted-message finding with NO snippet/literal.
     mock_ov_bin '{"findings":[{"rule":"aws-akia","severity":"high","baselined":false,"verified":false,"message":{"text":"<redacted>"}}]}'
     run run_entrypoint
-    # Action must successfully run end-to-end (exit 0 since no findings
-    # over fail-on threshold) before the leak check is meaningful.
-    [ "$status" -eq 0 ]
+    # Per #2 TestDirtyRepoExitsNonZeroWithCounts: severity:"high" with
+    # INPUT_FAIL_ON="high" exits non-zero (findings >= threshold).
+    # The leak-check assertions below run regardless — we only need
+    # $GITHUB_OUTPUT to have been written.
+    [ "$status" -ne 0 ]
     [ -f "$GITHUB_OUTPUT" ]
     [ -s "$GITHUB_OUTPUT" ]
     # Now the load-bearing assertions: action emits findings count to
@@ -472,16 +474,16 @@ BASH
 }
 
 @test "#26 TestRefusesMissingJq - jq removed from PATH causes fail-closed exit 2" {
-    # We simulate jq missing by prepending a dir that shadows jq with a
-    # broken stub, then run.
-    cat > "$TEST_TMP/bin/jq" <<'BASH'
-#!/bin/sh
-exit 127
-BASH
-    chmod +x "$TEST_TMP/bin/jq"
-    # And remove from PATH entirely.
-    export PATH="/usr/bin:/bin"
+    # Simulate jq genuinely missing: PATH points only at our isolated
+    # $TEST_TMP/bin (which contains the mock ov but no jq). Earlier
+    # iteration of this test set PATH=/usr/bin:/bin which RE-EXPOSED
+    # the system jq — making the test masquerade as itself (Devin
+    # PR #4 review catch).
     install_clean_repo
+    # PATH excludes any system path; only the test bin dir.
+    export PATH="$TEST_TMP/bin"
+    # Sanity check: jq is actually unreachable in the test environment.
+    ! command -v jq >/dev/null 2>&1
     run run_entrypoint
     [ "$status" -eq 2 ]
 }
