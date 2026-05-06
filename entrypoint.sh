@@ -159,9 +159,18 @@ done
 # pattern via grep. The runtime SHA check is bypassed under test mode but
 # the copy + chmod + parse logic is exercised exactly as in production.
 # ============================================================================
+# R6/PR5 senior-SWE finding (confidence 85): TEST_MODE was originally
+# gated only on $TEST_TMP. A workflow author could set
+# `env: TEST_TMP=/some/path` at step/job level and bypass the entire
+# signature-verification chain. Tightening: require BOTH $TEST_TMP and
+# explicit $OV_TEST_MODE=1 co-token, AND emit a loud workflow warning
+# whenever TEST_MODE fires. Helpers' make_test_workspace exports both;
+# customer YAML cannot smuggle the action into TEST_MODE without
+# unambiguously declaring intent.
 TEST_MODE="false"
-if [ -n "${TEST_TMP:-}" ]; then
+if [ -n "${TEST_TMP:-}" ] && [ "${OV_TEST_MODE:-}" = "1" ]; then
     TEST_MODE="true"
+    echo "::warning::ov-scan-action running in TEST_MODE — signature verification BYPASSED. This branch must NEVER fire in production CI; if you see this in a customer workflow, file a security issue immediately." >&2
 fi
 
 # ============================================================================

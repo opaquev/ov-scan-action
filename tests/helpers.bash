@@ -55,6 +55,11 @@ make_test_workspace() {
     TEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/ov-scan-action-test.XXXXXX")"
     export TEST_TMP
 
+    # R6/PR5: explicit OV_TEST_MODE co-token alongside TEST_TMP. The
+    # entrypoint requires BOTH to enter TEST_MODE, so a workflow author
+    # cannot smuggle into test mode by setting only TEST_TMP.
+    export OV_TEST_MODE=1
+
     mkdir -p \
         "$TEST_TMP/runner-temp" \
         "$TEST_TMP/workspace" \
@@ -96,7 +101,7 @@ teardown_test_workspace() {
         chmod -R u+w "$TEST_TMP" 2>/dev/null || true
         rm -rf "$TEST_TMP"
     fi
-    unset TEST_TMP OV_TEST_PATH_SNAPSHOT RUNNER_TEMP GITHUB_WORKSPACE \
+    unset TEST_TMP OV_TEST_MODE OV_TEST_PATH_SNAPSHOT RUNNER_TEMP GITHUB_WORKSPACE \
           GITHUB_ACTION_PATH GITHUB_OUTPUT GITHUB_EVENT_PATH \
           GITHUB_EVENT_NAME GITHUB_REPOSITORY RUNNER_OS \
           INPUT_PATH INPUT_BASELINE_FILE INPUT_FAIL_ON \
