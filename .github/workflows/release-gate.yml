@@ -68,7 +68,15 @@ jobs:
           if not dm:
               print(f"::error::{path}: missing last_drilled in frontmatter")
               sys.exit(1)
-          drilled = datetime.fromisoformat(dm.group(1).strip().strip('"').strip("'"))
+          # Python 3.10's fromisoformat does NOT accept the 'Z' suffix
+          # (added in 3.11). ubuntu-latest is currently 24.04 / Python
+          # 3.12, but pin defensively so a future runner-image change
+          # to ubuntu-22.04 (Python 3.10) doesn't silently break the
+          # gate. Per impl-risk reviewer R6/PR3-MEDIUM.
+          raw = dm.group(1).strip().strip('"').strip("'")
+          if raw.endswith("Z"):
+              raw = raw[:-1] + "+00:00"
+          drilled = datetime.fromisoformat(raw)
           if drilled.tzinfo is None:
               drilled = drilled.replace(tzinfo=timezone.utc)
           age = datetime.now(timezone.utc) - drilled
