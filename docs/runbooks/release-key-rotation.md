@@ -76,9 +76,11 @@ trusted:
    - Open a follow-up PR removing the `legacy` entry from
      `trusted-keys.txt`.
    - Update `TRUSTED_KEYS_SHA256` again.
-6. The custodian destroys the old private key (shred, then verify it
-   no longer exists via `minisign -G -p old.pub` rejecting on
-   nonexistent key).
+6. The custodian destroys the old private key (shred the file, then
+   verify absence: `[ ! -e <old-priv-path> ] && echo "destroyed"`).
+   Note: `minisign -G` *generates* a new key — it cannot be used to
+   verify that an old key has been destroyed; check file absence
+   directly instead.
 
 ### 4. Emergency-rotation path (no handover window)
 
