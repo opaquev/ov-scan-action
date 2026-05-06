@@ -634,7 +634,7 @@ set +e
         OV_INPUT_PATH="$INPUT_PATH" \
         OV_INPUT_BASELINE="$INPUT_BASELINE_FILE" \
         OV_INPUT_FAIL_ON="$INPUT_FAIL_ON" \
-        "${TEST_FORWARD[@]}" \
+        ${TEST_FORWARD[@]+"${TEST_FORWARD[@]}"} \
         "${OV_TIMEOUT[@]}" "$WALL_S" "$OV_BIN" scan "$INPUT_PATH" \
             --baseline "$INPUT_BASELINE_FILE" \
             --fail-on "$INPUT_FAIL_ON" \

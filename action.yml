@@ -47,7 +47,7 @@ inputs:
     default: '1048576'
 outputs:
   findings-count:
-    description: Number of unbaselined findings
+    description: Total number of findings (includes baselined; subtract baselined-count for unbaselined-only)
   baselined-count:
     description: Number of findings suppressed by baseline
   verified-count:
