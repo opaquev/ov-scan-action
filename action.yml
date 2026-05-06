@@ -1,0 +1,74 @@
+name: ov-scan
+description: Run ov scan in CI to detect plaintext credentials in your repository
+author: OpaqueVault
+branding:
+  icon: shield
+  color: blue
+inputs:
+  path:
+    description: Path to scan (relative to repo root)
+    required: false
+    default: .
+  baseline-file:
+    description: Path to baseline file with HMAC-fingerprinted accepted findings
+    required: false
+    default: .ovscan-baseline.txt
+  fail-on:
+    description: 'Severity threshold: verified|critical|high|medium|low|info'
+    required: false
+    default: high
+  min-ov-version:
+    description: Minimum ov binary version (e.g., v0.10.0)
+    required: false
+    default: ''
+  max-ov-version:
+    description: Maximum ov binary version
+    required: false
+    default: ''
+  allow-pull-request-target:
+    description: Required true to run under pull_request_target (DANGEROUS)
+    required: false
+    default: 'false'
+  allow-binary-version:
+    description: Allow custom ov binary version override (refused on fork PRs)
+    required: false
+    default: 'false'
+  allow-ci-baseline:
+    description: Allow baseline modifications in CI (refused on fork PRs)
+    required: false
+    default: 'false'
+  time-budget:
+    description: Wallclock seconds for ov scan invocation
+    required: false
+    default: '300'
+  memory-budget:
+    description: Memory budget for ov scan in KB (Linux only; ignored on macOS)
+    required: false
+    default: '1048576'
+outputs:
+  findings-count:
+    description: Total number of findings (includes baselined; subtract baselined-count for unbaselined-only)
+    value: ${{ steps.ov-scan.outputs.findings-count }}
+  baselined-count:
+    description: Number of findings suppressed by baseline
+    value: ${{ steps.ov-scan.outputs.baselined-count }}
+  verified-count:
+    description: Number of findings whose liveness was verified
+    value: ${{ steps.ov-scan.outputs.verified-count }}
+runs:
+  using: composite
+  steps:
+    - id: ov-scan
+      shell: bash --noprofile --norc -o pipefail {0}
+      env:
+        INPUT_PATH:                      ${{ inputs.path }}
+        INPUT_BASELINE_FILE:             ${{ inputs.baseline-file }}
+        INPUT_FAIL_ON:                   ${{ inputs.fail-on }}
+        INPUT_MIN_OV_VERSION:            ${{ inputs.min-ov-version }}
+        INPUT_MAX_OV_VERSION:            ${{ inputs.max-ov-version }}
+        INPUT_ALLOW_PULL_REQUEST_TARGET: ${{ inputs.allow-pull-request-target }}
+        INPUT_ALLOW_BINARY_VERSION:      ${{ inputs.allow-binary-version }}
+        INPUT_ALLOW_CI_BASELINE:         ${{ inputs.allow-ci-baseline }}
+        INPUT_TIME_BUDGET:               ${{ inputs.time-budget }}
+        INPUT_MEMORY_BUDGET:             ${{ inputs.memory-budget }}
+      run: $GITHUB_ACTION_PATH/entrypoint.sh

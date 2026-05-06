@@ -42,8 +42,23 @@ helper_sha256() {
 #   $TEST_TMP/bin/           - prepended to $PATH for mock binaries
 # ---------------------------------------------------------------------------
 make_test_workspace() {
+    # Snapshot original PATH so teardown can restore it. Tests like
+    # #26 TestRefusesMissingJq override PATH to a minimal value to
+    # simulate jq absence; without restoration, bats' own internal
+    # exit-trap shell can't find /usr/bin/rm and emits
+    # "rm: command not found" — bats then exits 1 even though all
+    # 75 tests passed individually. (Caught by CI on PR #5; local
+    # macOS reproduces the same failure.)
+    OV_TEST_PATH_SNAPSHOT="$PATH"
+    export OV_TEST_PATH_SNAPSHOT
+
     TEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/ov-scan-action-test.XXXXXX")"
     export TEST_TMP
+
+    # R6/PR5: explicit OV_TEST_MODE co-token alongside TEST_TMP. The
+    # entrypoint requires BOTH to enter TEST_MODE, so a workflow author
+    # cannot smuggle into test mode by setting only TEST_TMP.
+    export OV_TEST_MODE=1
 
     mkdir -p \
         "$TEST_TMP/runner-temp" \
@@ -76,12 +91,19 @@ make_test_workspace() {
 }
 
 teardown_test_workspace() {
+    # Restore PATH FIRST — bats' exit-trap shell needs /usr/bin/rm.
+    # Must run before any other shell command that depends on PATH.
+    if [ -n "${OV_TEST_PATH_SNAPSHOT:-}" ]; then
+        export PATH="$OV_TEST_PATH_SNAPSHOT"
+    fi
+
     if [ -n "${TEST_TMP:-}" ] && [ -d "$TEST_TMP" ]; then
         chmod -R u+w "$TEST_TMP" 2>/dev/null || true
         rm -rf "$TEST_TMP"
     fi
-    unset TEST_TMP RUNNER_TEMP GITHUB_WORKSPACE GITHUB_ACTION_PATH GITHUB_OUTPUT \
-          GITHUB_EVENT_PATH GITHUB_EVENT_NAME GITHUB_REPOSITORY RUNNER_OS \
+    unset TEST_TMP OV_TEST_MODE OV_TEST_PATH_SNAPSHOT RUNNER_TEMP GITHUB_WORKSPACE \
+          GITHUB_ACTION_PATH GITHUB_OUTPUT GITHUB_EVENT_PATH \
+          GITHUB_EVENT_NAME GITHUB_REPOSITORY RUNNER_OS \
           INPUT_PATH INPUT_BASELINE_FILE INPUT_FAIL_ON \
           INPUT_MIN_OV_VERSION INPUT_MAX_OV_VERSION \
           INPUT_ALLOW_PULL_REQUEST_TARGET INPUT_ALLOW_BINARY_VERSION \
@@ -166,7 +188,7 @@ install_trusted_keys() {
             printf '%s\n%s\n%s\n' \
                 'RWQLHCx3CKub+D3Wnc1zX/YBVr1fJD5SrK08d2xp4XoTQipbFET8V0fU required' \
                 'RWQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA legacy' \
-                'RWQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB legacy' \
+                'RWQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB legacy' \
                 > "$target"
             ;;
         malformed)
@@ -244,7 +266,14 @@ install_dirty_repo() {
 # Tests that need richer behavior write their own custom stub directly.
 # ---------------------------------------------------------------------------
 mock_ov_bin() {
-    local scan_json="${1:-{\"findings\":[]}}"
+    # Note: bash parameter expansion `${1:-{...}}` doesn't count nested braces,
+    # so the closing `}}` would tack a trailing `}` onto a caller-supplied
+    # value (helpers-bug discovered during PR #5 green phase). Use a plain
+    # default-via-empty-check instead.
+    local scan_json="${1-}"
+    if [ -z "$scan_json" ]; then
+        scan_json='{"findings":[]}'
+    fi
     local version_text="${2:-ov version 0.10.0 (commit abc123, built 2026-05-05T00:00:00Z)}"
     local target="$TEST_TMP/bin/ov"
     {
@@ -282,7 +311,9 @@ mock_ov_bin() {
 # Exit code propagates via bash entrypoint.sh's rc.
 # ---------------------------------------------------------------------------
 run_entrypoint() {
-    bash "$ENTRYPOINT_PATH"
+    # Use absolute /bin/bash so tests that set PATH to a minimal value
+    # (e.g. #26 TestRefusesMissingJq) still find a bash to launch with.
+    /bin/bash "$ENTRYPOINT_PATH"
 }
 
 # ---------------------------------------------------------------------------
