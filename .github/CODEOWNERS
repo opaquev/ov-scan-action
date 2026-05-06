@@ -1,17 +1,26 @@
 # CODEOWNERS for opaquev/ov-scan-action
 #
-# Pattern semantics: GitHub uses LAST-MATCHING-PATTERN-WINS, so the
-# catch-all `*` line MUST stay at the TOP of this file. Specific path
+# Pattern semantics: GitHub uses LAST-MATCHING-PATTERN-WINS.
+# The catch-all `*` line below MUST stay at the TOP. Specific path
 # rules go AFTER the catch-all so they override it.
-#
-# This file is intentionally empty (no owner rules) for PR #1 (bootstrap).
-# Code-owner review enforcement is enabled on `main` AFTER this PR merges
-# so that subsequent PRs (starting with PR #2 which populates real owners)
-# are subject to the rule.
 #
 # Solo CODEOWNER staffing for v1: @huntrock17. The 2-of-N defense
 # normally provided by multiple human reviewers is delegated to the
-# per-PR canonical AI-reviewer loop:
-#   pre-review (3-lens) → implementer → spec/code/post-review →
-#   CI green → Devin → senior SWE → merge.
-# A follow-up ticket will add human co-reviewers when the team grows.
+# per-PR canonical AI-reviewer loop (pre-review, post-review, Devin,
+# senior SWE). A follow-up ticket will add human co-reviewers when
+# the team grows.
+
+# ---- catch-all (must be at top) -------------------------------------
+*                          @huntrock17
+
+# ---- specific load-bearing files (override catch-all) ---------------
+# These rules are functionally identical to the catch-all today (same
+# owner) but keep them explicit so that adding a co-reviewer later only
+# requires editing these lines, not auditing every path.
+.github/CODEOWNERS         @huntrock17
+.github/workflows/         @huntrock17
+action.yml                 @huntrock17
+entrypoint.sh              @huntrock17
+trusted-keys.txt           @huntrock17
+vendor/                    @huntrock17
+docs/runbooks/             @huntrock17
