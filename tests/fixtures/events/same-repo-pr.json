@@ -1,0 +1,26 @@
+{
+  "action": "opened",
+  "number": 42,
+  "pull_request": {
+    "number": 42,
+    "title": "Same-repo branch PR",
+    "head": {
+      "ref": "feature/same-repo",
+      "sha": "abcd000000000000000000000000000000000000",
+      "repo": {
+        "full_name": "opaquev/test-fixture",
+        "fork": false
+      }
+    },
+    "base": {
+      "ref": "main",
+      "sha": "1234000000000000000000000000000000000000",
+      "repo": {
+        "full_name": "opaquev/test-fixture"
+      }
+    }
+  },
+  "repository": {
+    "full_name": "opaquev/test-fixture"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "action": "opened",
+  "number": 99,
+  "pull_request": {
+    "number": 99,
+    "title": "Fork PR from external contributor",
+    "head": {
+      "ref": "feature/from-fork",
+      "sha": "beef000000000000000000000000000000000000",
+      "repo": {
+        "full_name": "fork-user/test-fixture",
+        "fork": true
+      }
+    },
+    "base": {
+      "ref": "main",
+      "sha": "1234000000000000000000000000000000000000",
+      "repo": {
+        "full_name": "opaquev/test-fixture"
+      }
+    }
+  },
+  "repository": {
+    "full_name": "opaquev/test-fixture"
+  }
+}

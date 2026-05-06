@@ -1,0 +1,23 @@
+{
+  "action": "synchronize",
+  "number": 77,
+  "pull_request": {
+    "number": 77,
+    "title": "PR with deleted head repo (null head.repo)",
+    "head": {
+      "ref": "feature/orphan",
+      "sha": "dead000000000000000000000000000000000000",
+      "repo": null
+    },
+    "base": {
+      "ref": "main",
+      "sha": "1234000000000000000000000000000000000000",
+      "repo": {
+        "full_name": "opaquev/test-fixture"
+      }
+    }
+  },
+  "repository": {
+    "full_name": "opaquev/test-fixture"
+  }
+}

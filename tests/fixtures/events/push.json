@@ -1,0 +1,13 @@
+{
+  "ref": "refs/heads/main",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "abcd000000000000000000000000000000000000",
+  "repository": {
+    "full_name": "opaquev/test-fixture",
+    "default_branch": "main"
+  },
+  "pusher": {
+    "name": "octocat",
+    "email": "octocat@example.com"
+  }
+}
