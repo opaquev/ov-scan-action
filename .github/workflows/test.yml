@@ -1,0 +1,54 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bats:
+    name: bats (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1, SHA-pinned
+
+      - name: Install bats-core (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y bats jq
+
+      - name: Install bats-core (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bats-core jq
+
+      - name: Run test contracts
+        run: |
+          if [ -d tests ]; then
+            bats tests/
+          else
+            echo "::warning::tests/ not yet present; skip until PR #4 (red phase) lands"
+          fi
+
+  shellcheck:
+    name: shellcheck v0.10.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: shellcheck
+        # koalaman/shellcheck-alpine v0.10.0 — pinned per R2-M8 / plan §M8.
+        run: |
+          if compgen -G '*.sh' >/dev/null || compgen -G 'tests/*.bash' >/dev/null; then
+            docker run --rm -v "$PWD:/mnt" koalaman/shellcheck-alpine:v0.10.0 \
+              sh -c 'find /mnt -name "*.sh" -o -name "*.bash" | xargs -r shellcheck'
+          else
+            echo "::warning::no shell scripts present yet; skip until PR #5 (green phase) lands"
+          fi

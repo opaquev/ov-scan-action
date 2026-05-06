@@ -1,0 +1,99 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Install yamllint
+        run: pip install yamllint==1.35.1
+      - name: Lint
+        run: yamllint .
+
+  no-unsafe-github-expressions:
+    # R2-M4 / plan §R2-M4: NO `${{ inputs.* }}` or `${{ github.* }}`
+    # inside any `run:` block. Allowed in `env:`, `with:`, or `if:`.
+    # Implementation parses action.yml via Python+yq AST, not grep.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Install yq (SHA-pinned)
+        # SHA-pinning yq closes a supply-chain gap: an attacker who
+        # compromises mikefarah/yq's release pipeline could otherwise
+        # ship a yq that emits empty strings for `.runs.steps[].run`,
+        # silently passing the no-unsafe-github-expressions guard. Per
+        # threat-model reviewer R6/PR3-MEDIUM. Recompute SHA when bumping.
+        env:
+          YQ_VERSION: v4.44.3
+          YQ_SHA256: a2c097180dd884a8d50c956ee16a9cec070f30a7947cf4ebf87d5f36213e9ed7
+        run: |
+          sudo wget -qO /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum --check --strict
+          sudo chmod +x /usr/local/bin/yq
+      - name: Check action.yml run blocks
+        run: |
+          if [ ! -f action.yml ]; then
+            echo "::warning::action.yml not yet present; skip until PR #5 lands"
+            exit 0
+          fi
+          # Extract every `run:` value and grep for forbidden patterns.
+          yq '.runs.steps[].run // ""' action.yml | tee /tmp/run-blocks.txt
+          if grep -E '\$\{\{\s*(inputs|github)\.' /tmp/run-blocks.txt; then
+            echo "::error::action.yml run: block contains forbidden GitHub expression. See R2-M4 / TH7 / R3-H5 in plan doc."
+            exit 1
+          fi
+
+  no-actions-cache:
+    # R2-M4 corollary: `actions/cache` MUST NOT be used (would weaken
+    # trust chain by introducing a third-party-controlled blob into
+    # the runner before signature verification).
+    #
+    # Self-referential-grep defense: this very workflow file lives
+    # under .github/workflows/ and would match itself if we grepped
+    # for the literal string. We exclude this file from the search
+    # so the grep targets actual cache invocations.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Check no actions cache usage
+        run: |
+          # Using a regex that matches `uses:` lines specifically, NOT
+          # any literal occurrence of the string. False-positive-proof
+          # against this workflow's own grep pattern.
+          if grep -rE '^\s*-?\s*uses:\s*actions/cache@' .github/ 2>/dev/null; then
+            echo "::error::actions cache usage detected. Forbidden per plan §test contract #6 / TestNoActionsCacheUsage."
+            exit 1
+          fi
+          echo "no actions cache usage detected"
+
+  vendor-binaries-not-normalized:
+    # R3-M4 / test contract #33: every binary file under vendor/ must
+    # have `binary` gitattribute set, otherwise text normalization
+    # mangles the Mach-O / ELF binaries.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Check vendor binaries have binary gitattribute
+        run: |
+          if [ ! -d vendor ]; then
+            echo "::warning::vendor/ not yet present"
+            exit 0
+          fi
+          missing=0
+          while IFS= read -r f; do
+            attr=$(git check-attr binary -- "$f" | awk -F': ' '{print $NF}')
+            if [ "$attr" != "set" ]; then
+              echo "::error::$f does NOT have binary attribute (got: $attr)"
+              missing=1
+            fi
+          done < <(find vendor -type f ! -name 'README.md' ! -name 'SHA256SUMS')
+          [ "$missing" -eq 0 ] || exit 1

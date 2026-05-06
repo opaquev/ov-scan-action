@@ -1,0 +1,91 @@
+name: release-gate
+
+# R6-H5 / plan §"release-gate.yml workflow trigger":
+# Manual workflow_dispatch ONLY. Refuses to greenlight a v1* tag unless
+# docs/runbooks/release-key-rotation.md has a `last_drilled` frontmatter
+# date < 90 days old. The maintainer dispatches this workflow before
+# tagging v1.* and tags only after this run is green.
+#
+# Runs on ubuntu-latest only — BSD `date -d` doesn't work on macOS,
+# and Python is the universal datetime parser anyway.
+#
+# Workflow-injection hardening: the `proposed-tag` user input is bound
+# to an env var (PROPOSED_TAG) and accessed via "$PROPOSED_TAG" in
+# run: blocks. NEVER use ${{ inputs.proposed-tag }} directly inside
+# a `run:` block — that would be a workflow-injection vector.
+
+on:
+  workflow_dispatch:
+    inputs:
+      proposed-tag:
+        description: 'Proposed tag (e.g., v1.0.0). Must start with v1.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    env:
+      # Bind input to env var ONCE, at job scope, so every step uses
+      # the same quoted form. No `${{ inputs.* }}` inside `run:` blocks.
+      PROPOSED_TAG: ${{ inputs.proposed-tag }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+
+      - name: Validate proposed tag
+        run: |
+          if [[ ! "$PROPOSED_TAG" =~ ^v1\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+            echo "::error::proposed-tag '$PROPOSED_TAG' is not a valid v1.* semver"
+            exit 1
+          fi
+          echo "proposed tag: $PROPOSED_TAG"
+
+      - name: Check release-key-rotation runbook exists
+        run: |
+          if [ ! -f docs/runbooks/release-key-rotation.md ]; then
+            echo "::error::docs/runbooks/release-key-rotation.md missing — required per R2-N1 / plan §TH1"
+            exit 1
+          fi
+
+      - name: Check last_drilled freshness (< 90 days)
+        run: |
+          python3 <<'PY'
+          import re, sys
+          from datetime import datetime, timezone, timedelta
+          path = "docs/runbooks/release-key-rotation.md"
+          with open(path) as f:
+              text = f.read()
+          # YAML frontmatter block: `---\n...\n---`
+          m = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+          if not m:
+              print(f"::error::{path}: missing YAML frontmatter")
+              sys.exit(1)
+          fm = m.group(1)
+          dm = re.search(r"^last_drilled:\s*(\S+)", fm, re.MULTILINE)
+          if not dm:
+              print(f"::error::{path}: missing last_drilled in frontmatter")
+              sys.exit(1)
+          # Python 3.10's fromisoformat does NOT accept the 'Z' suffix
+          # (added in 3.11). ubuntu-latest is currently 24.04 / Python
+          # 3.12, but pin defensively so a future runner-image change
+          # to ubuntu-22.04 (Python 3.10) doesn't silently break the
+          # gate. Per impl-risk reviewer R6/PR3-MEDIUM.
+          raw = dm.group(1).strip().strip('"').strip("'")
+          if raw.endswith("Z"):
+              raw = raw[:-1] + "+00:00"
+          drilled = datetime.fromisoformat(raw)
+          if drilled.tzinfo is None:
+              drilled = drilled.replace(tzinfo=timezone.utc)
+          age = datetime.now(timezone.utc) - drilled
+          if age > timedelta(days=90):
+              print(f"::error::last_drilled is {age.days} days old (max 90). Run a fresh key-rotation drill before tagging v1.*")
+              sys.exit(1)
+          print(f"last_drilled: {drilled.isoformat()}, age: {age.days} days. OK.")
+          PY
+
+      - name: Greenlight
+        run: |
+          echo "::notice::release-gate green for tag '$PROPOSED_TAG'. Maintainer may now tag and push."

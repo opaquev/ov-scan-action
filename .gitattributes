@@ -3,8 +3,29 @@
 # fail the per-line read loop in entrypoint.sh. .gitattributes pins the
 # format on every checkout regardless of platform.
 
-* text eol=lf
+* text=auto eol=lf
 *.sh text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 trusted-keys.txt text eol=lf
+
+# Vendored binaries MUST NOT be normalized (R3-M4 / plan §"Files to create").
+# Mach-O and ELF binaries would be silently corrupted by line-ending
+# normalization. Test contract #33 (TestVendorBinariesNotNormalized)
+# greps `git check-attr binary vendor/minisign-*` and asserts `binary: set`
+# for every binary file under vendor/.
+vendor/** binary
+
+# Exception: README.md and SHA256SUMS in vendor/ ARE text. Without these
+# explicit overrides, the `vendor/** binary` rule above would mark them
+# as binary (the `binary` macro = `-text -diff -merge`), which causes
+# GitHub to render "Binary files differ" in PR diffs — defeating
+# textual review of vendor-bump PRs (the PRs that need the most
+# scrutiny). Per impl-risk reviewer R6/PR3-HIGH-1.
+#
+# Note: must use `-binary` to NEGATE the macro, then re-establish text
+# attrs explicitly. A bare `text eol=lf` line does not undo the prior
+# `binary` macro because gitattributes' attribute namespace is sticky
+# for unspecified attrs.
+vendor/README.md   -binary text eol=lf diff merge
+vendor/SHA256SUMS  -binary text eol=lf diff merge
