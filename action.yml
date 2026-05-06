@@ -48,14 +48,18 @@ inputs:
 outputs:
   findings-count:
     description: Total number of findings (includes baselined; subtract baselined-count for unbaselined-only)
+    value: ${{ steps.ov-scan.outputs.findings-count }}
   baselined-count:
     description: Number of findings suppressed by baseline
+    value: ${{ steps.ov-scan.outputs.baselined-count }}
   verified-count:
     description: Number of findings whose liveness was verified
+    value: ${{ steps.ov-scan.outputs.verified-count }}
 runs:
   using: composite
   steps:
-    - shell: bash --noprofile --norc -o pipefail {0}
+    - id: ov-scan
+      shell: bash --noprofile --norc -o pipefail {0}
       env:
         INPUT_PATH:                      ${{ inputs.path }}
         INPUT_BASELINE_FILE:             ${{ inputs.baseline-file }}
