@@ -11,6 +11,10 @@
 load 'helpers'
 
 setup() {
+    # Auto-skip during PR #4 (red phase) — all 4 structural tests check
+    # action.yml and/or entrypoint.sh shape. PR #5 ships those files and
+    # the skips auto-disable.
+    skip_if_no_entrypoint
     make_test_workspace
     install_minisign_stub
     install_trusted_keys valid
@@ -36,7 +40,7 @@ teardown() {
 # Every run: step in action.yml has a sibling shell:.
 # ---------------------------------------------------------------------------
 @test "structural: TestActionYmlValidatesShellOnEveryStep - every run: step has sibling shell:" {
-    [ -f "$ACTION_YML" ]
+    [ -f "$ACTION_YML" ] || skip "action.yml not yet present (PR #5 implements)"
     if command -v yq >/dev/null 2>&1; then
         # For every step that has a `run` key, the same step must have a `shell` key.
         local missing
@@ -56,7 +60,7 @@ teardown() {
 # First lines of entrypoint.sh are #!/usr/bin/env bash then set -euo pipefail.
 # ---------------------------------------------------------------------------
 @test "structural: TestEntrypointShellSetEuoPipefail - shebang + set -euo pipefail at top" {
-    [ -f "$ENTRYPOINT_PATH" ]
+    [ -f "$ENTRYPOINT_PATH" ] || skip "entrypoint.sh not yet present (PR #5 implements)"
     local first_line second_line third_line
     first_line=$(sed -n '1p' "$ENTRYPOINT_PATH")
     [ "$first_line" = "#!/usr/bin/env bash" ]

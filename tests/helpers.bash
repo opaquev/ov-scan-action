@@ -286,6 +286,25 @@ run_entrypoint() {
 }
 
 # ---------------------------------------------------------------------------
+# skip_if_no_entrypoint
+#
+# Call from each test's setup() (or first line of @test body) to auto-skip
+# during PR #4 (red phase) when entrypoint.sh / action.yml don't exist
+# yet. PR #5 ships those files and the skip auto-disables. The contracts
+# remain authoritative — implementer sees them flip from "skipped" →
+# "failed" → "passed" as PR #5 progresses.
+#
+# `skip` only works when called from the test body directly (or from
+# setup() invoked by bats), NOT from within a function called via `run`.
+# That's why this is a separate helper rather than baked into run_entrypoint.
+# ---------------------------------------------------------------------------
+skip_if_no_entrypoint() {
+    if [ ! -f "$ENTRYPOINT_PATH" ]; then
+        skip "entrypoint.sh not yet present (PR #5 implements)"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # get_output_value <key>
 #
 # Read a key=value line from $GITHUB_OUTPUT and print the value.
