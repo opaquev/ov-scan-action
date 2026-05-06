@@ -166,7 +166,7 @@ install_trusted_keys() {
             printf '%s\n%s\n%s\n' \
                 'RWQLHCx3CKub+D3Wnc1zX/YBVr1fJD5SrK08d2xp4XoTQipbFET8V0fU required' \
                 'RWQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA legacy' \
-                'RWQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB legacy' \
+                'RWQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB legacy' \
                 > "$target"
             ;;
         malformed)
@@ -244,7 +244,14 @@ install_dirty_repo() {
 # Tests that need richer behavior write their own custom stub directly.
 # ---------------------------------------------------------------------------
 mock_ov_bin() {
-    local scan_json="${1:-{\"findings\":[]}}"
+    # Note: bash parameter expansion `${1:-{...}}` doesn't count nested braces,
+    # so the closing `}}` would tack a trailing `}` onto a caller-supplied
+    # value (helpers-bug discovered during PR #5 green phase). Use a plain
+    # default-via-empty-check instead.
+    local scan_json="${1-}"
+    if [ -z "$scan_json" ]; then
+        scan_json='{"findings":[]}'
+    fi
     local version_text="${2:-ov version 0.10.0 (commit abc123, built 2026-05-05T00:00:00Z)}"
     local target="$TEST_TMP/bin/ov"
     {
@@ -282,7 +289,9 @@ mock_ov_bin() {
 # Exit code propagates via bash entrypoint.sh's rc.
 # ---------------------------------------------------------------------------
 run_entrypoint() {
-    bash "$ENTRYPOINT_PATH"
+    # Use absolute /bin/bash so tests that set PATH to a minimal value
+    # (e.g. #26 TestRefusesMissingJq) still find a bash to launch with.
+    /bin/bash "$ENTRYPOINT_PATH"
 }
 
 # ---------------------------------------------------------------------------
