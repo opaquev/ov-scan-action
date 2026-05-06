@@ -1,0 +1,82 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Install yamllint
+        run: pip install yamllint==1.35.1
+      - name: Lint
+        run: yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" .github/
+
+  no-unsafe-github-expressions:
+    # R2-M4 / plan §R2-M4: NO `${{ inputs.* }}` or `${{ github.* }}`
+    # inside any `run:` block. Allowed in `env:`, `with:`, or `if:`.
+    # Implementation parses action.yml via Python+yq AST, not grep.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      - name: Check action.yml run blocks
+        run: |
+          if [ ! -f action.yml ]; then
+            echo "::warning::action.yml not yet present; skip until PR #5 lands"
+            exit 0
+          fi
+          # Extract every `run:` value and grep for forbidden patterns.
+          yq '.runs.steps[].run // ""' action.yml | tee /tmp/run-blocks.txt
+          if grep -E '\$\{\{\s*(inputs|github)\.' /tmp/run-blocks.txt; then
+            echo "::error::action.yml run: block contains forbidden \${{ inputs.* }} or \${{ github.* }} expression. See R2-M4 / TH7 / R3-H5 in plan doc."
+            exit 1
+          fi
+
+  no-actions-cache:
+    # R2-M4 corollary: actions/cache MUST NOT be used (would weaken
+    # trust chain by introducing a third-party-controlled blob into
+    # the runner before signature verification).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Check no actions/cache usage
+        run: |
+          if grep -rE 'actions/cache@' .github/ 2>/dev/null; then
+            echo "::error::actions/cache usage detected. Forbidden per plan §test contract #6 / TestNoActionsCacheUsage."
+            exit 1
+          fi
+          echo "no actions/cache usage detected"
+
+  vendor-binaries-not-normalized:
+    # R3-M4 / test contract #33: every file under vendor/ must have
+    # `binary` gitattribute set, otherwise text normalization mangles
+    # the Mach-O / ELF binaries.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - name: Check vendor/** has binary gitattribute
+        run: |
+          if [ ! -d vendor ]; then
+            echo "::warning::vendor/ not yet present"
+            exit 0
+          fi
+          missing=0
+          while IFS= read -r f; do
+            attr=$(git check-attr binary -- "$f" | awk -F': ' '{print $NF}')
+            if [ "$attr" != "set" ]; then
+              echo "::error::$f does NOT have binary attribute (got: $attr)"
+              missing=1
+            fi
+          done < <(find vendor -type f ! -name 'README.md' ! -name 'SHA256SUMS')
+          [ "$missing" -eq 0 ] || exit 1

@@ -3,8 +3,15 @@
 # fail the per-line read loop in entrypoint.sh. .gitattributes pins the
 # format on every checkout regardless of platform.
 
-* text eol=lf
+* text=auto eol=lf
 *.sh text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 trusted-keys.txt text eol=lf
+
+# Vendored binaries MUST NOT be normalized (R3-M4 / plan §"Files to create").
+# Mach-O and ELF binaries would be silently corrupted by line-ending
+# normalization. Test contract #33 (TestVendorBinariesNotNormalized)
+# greps `git check-attr binary vendor/minisign-*` and asserts `binary: set`
+# for every file under vendor/.
+vendor/** binary
