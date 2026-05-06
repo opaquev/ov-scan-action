@@ -19,16 +19,25 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1, SHA-pinned
 
-      - name: Install bats-core (Linux)
+      - name: Install bats-core + jq + yq (Linux)
         if: runner.os == 'Linux'
+        env:
+          # Match ci.yml's SHA-pin so the no-unsafe-github-expressions
+          # gate uses the same yq across workflows. See ci.yml R6/PR3-MEDIUM.
+          YQ_VERSION: v4.44.3
+          YQ_SHA256: a2c097180dd884a8d50c956ee16a9cec070f30a7947cf4ebf87d5f36213e9ed7
         run: |
           sudo apt-get update -y
           sudo apt-get install -y bats jq
+          sudo wget -qO /usr/local/bin/yq \
+            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum --check --strict
+          sudo chmod +x /usr/local/bin/yq
 
-      - name: Install bats-core (macOS)
+      - name: Install bats-core + jq + yq (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install bats-core jq
+          brew install bats-core jq yq
 
       - name: Run test contracts
         run: |

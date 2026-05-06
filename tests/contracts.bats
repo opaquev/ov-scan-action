@@ -142,7 +142,10 @@ BASH
 @test "#7 TestNoInstallShBootstrap - no install.sh or curl-pipe-sh pattern in any shell" {
     [ -f "$ACTION_YML" ] || skip "action.yml not yet present (PR #5 implements)"
     [ -f "$ENTRYPOINT_PATH" ] || skip "entrypoint.sh not yet present (PR #5 implements)"
-    ! grep -E '(install\.sh|curl[^|]*\|\s*sh)' "$ENTRYPOINT_PATH" "$ACTION_YML" 2>/dev/null
+    # Note: `\s` is NOT a valid whitespace class in BSD/macOS grep ERE
+    # (it's interpreted as the literal character 's'). Use POSIX
+    # [[:space:]]* for portable whitespace matching.
+    ! grep -E '(install\.sh|curl[^|]*\|[[:space:]]*sh)' "$ENTRYPOINT_PATH" "$ACTION_YML" 2>/dev/null
 }
 
 @test "#8a TestBinaryVersionFromBinarySelfReport - --version output begins with 'ov version '" {
