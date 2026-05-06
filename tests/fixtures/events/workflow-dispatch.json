@@ -1,0 +1,12 @@
+{
+  "ref": "refs/heads/main",
+  "inputs": {},
+  "workflow": ".github/workflows/scan.yml",
+  "repository": {
+    "full_name": "opaquev/test-fixture",
+    "default_branch": "main"
+  },
+  "sender": {
+    "login": "octocat"
+  }
+}

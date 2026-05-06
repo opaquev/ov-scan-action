@@ -1,0 +1,17 @@
+---
+# Application settings. All values here are non-sensitive defaults.
+# Real secrets are injected at runtime via the environment, never
+# checked into source control.
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout_seconds: 30
+
+logging:
+  level: info
+  format: json
+
+features:
+  enable_metrics: true
+  enable_tracing: false
