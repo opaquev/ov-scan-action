@@ -42,6 +42,16 @@ helper_sha256() {
 #   $TEST_TMP/bin/           - prepended to $PATH for mock binaries
 # ---------------------------------------------------------------------------
 make_test_workspace() {
+    # Snapshot original PATH so teardown can restore it. Tests like
+    # #26 TestRefusesMissingJq override PATH to a minimal value to
+    # simulate jq absence; without restoration, bats' own internal
+    # exit-trap shell can't find /usr/bin/rm and emits
+    # "rm: command not found" — bats then exits 1 even though all
+    # 75 tests passed individually. (Caught by CI on PR #5; local
+    # macOS reproduces the same failure.)
+    OV_TEST_PATH_SNAPSHOT="$PATH"
+    export OV_TEST_PATH_SNAPSHOT
+
     TEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/ov-scan-action-test.XXXXXX")"
     export TEST_TMP
 
@@ -76,12 +86,19 @@ make_test_workspace() {
 }
 
 teardown_test_workspace() {
+    # Restore PATH FIRST — bats' exit-trap shell needs /usr/bin/rm.
+    # Must run before any other shell command that depends on PATH.
+    if [ -n "${OV_TEST_PATH_SNAPSHOT:-}" ]; then
+        export PATH="$OV_TEST_PATH_SNAPSHOT"
+    fi
+
     if [ -n "${TEST_TMP:-}" ] && [ -d "$TEST_TMP" ]; then
         chmod -R u+w "$TEST_TMP" 2>/dev/null || true
         rm -rf "$TEST_TMP"
     fi
-    unset TEST_TMP RUNNER_TEMP GITHUB_WORKSPACE GITHUB_ACTION_PATH GITHUB_OUTPUT \
-          GITHUB_EVENT_PATH GITHUB_EVENT_NAME GITHUB_REPOSITORY RUNNER_OS \
+    unset TEST_TMP OV_TEST_PATH_SNAPSHOT RUNNER_TEMP GITHUB_WORKSPACE \
+          GITHUB_ACTION_PATH GITHUB_OUTPUT GITHUB_EVENT_PATH \
+          GITHUB_EVENT_NAME GITHUB_REPOSITORY RUNNER_OS \
           INPUT_PATH INPUT_BASELINE_FILE INPUT_FAIL_ON \
           INPUT_MIN_OV_VERSION INPUT_MAX_OV_VERSION \
           INPUT_ALLOW_PULL_REQUEST_TARGET INPUT_ALLOW_BINARY_VERSION \
