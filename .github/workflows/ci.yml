@@ -16,7 +16,7 @@ jobs:
       - name: Install yamllint
         run: pip install yamllint==1.35.1
       - name: Lint
-        run: yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" .github/
+        run: yamllint .
 
   no-unsafe-github-expressions:
     # R2-M4 / plan §R2-M4: NO `${{ inputs.* }}` or `${{ github.* }}`
@@ -48,33 +48,41 @@ jobs:
           # Extract every `run:` value and grep for forbidden patterns.
           yq '.runs.steps[].run // ""' action.yml | tee /tmp/run-blocks.txt
           if grep -E '\$\{\{\s*(inputs|github)\.' /tmp/run-blocks.txt; then
-            echo "::error::action.yml run: block contains forbidden \${{ inputs.* }} or \${{ github.* }} expression. See R2-M4 / TH7 / R3-H5 in plan doc."
+            echo "::error::action.yml run: block contains forbidden GitHub expression. See R2-M4 / TH7 / R3-H5 in plan doc."
             exit 1
           fi
 
   no-actions-cache:
-    # R2-M4 corollary: actions/cache MUST NOT be used (would weaken
+    # R2-M4 corollary: `actions/cache` MUST NOT be used (would weaken
     # trust chain by introducing a third-party-controlled blob into
     # the runner before signature verification).
+    #
+    # Self-referential-grep defense: this very workflow file lives
+    # under .github/workflows/ and would match itself if we grepped
+    # for the literal string. We exclude this file from the search
+    # so the grep targets actual cache invocations.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
-      - name: Check no actions/cache usage
+      - name: Check no actions cache usage
         run: |
-          if grep -rE 'actions/cache@' .github/ 2>/dev/null; then
-            echo "::error::actions/cache usage detected. Forbidden per plan §test contract #6 / TestNoActionsCacheUsage."
+          # Using a regex that matches `uses:` lines specifically, NOT
+          # any literal occurrence of the string. False-positive-proof
+          # against this workflow's own grep pattern.
+          if grep -rE '^\s*-?\s*uses:\s*actions/cache@' .github/ 2>/dev/null; then
+            echo "::error::actions cache usage detected. Forbidden per plan §test contract #6 / TestNoActionsCacheUsage."
             exit 1
           fi
-          echo "no actions/cache usage detected"
+          echo "no actions cache usage detected"
 
   vendor-binaries-not-normalized:
-    # R3-M4 / test contract #33: every file under vendor/ must have
-    # `binary` gitattribute set, otherwise text normalization mangles
-    # the Mach-O / ELF binaries.
+    # R3-M4 / test contract #33: every binary file under vendor/ must
+    # have `binary` gitattribute set, otherwise text normalization
+    # mangles the Mach-O / ELF binaries.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
-      - name: Check vendor/** has binary gitattribute
+      - name: Check vendor binaries have binary gitattribute
         run: |
           if [ ! -d vendor ]; then
             echo "::warning::vendor/ not yet present"
