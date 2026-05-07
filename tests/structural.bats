@@ -28,7 +28,7 @@ setup() {
     export INPUT_ALLOW_BINARY_VERSION="false"
     export INPUT_ALLOW_CI_BASELINE="false"
     export INPUT_TIME_BUDGET="300"
-    export INPUT_MEMORY_BUDGET="1048576"
+    export INPUT_MEMORY_BUDGET="4194304"
 }
 
 teardown() {

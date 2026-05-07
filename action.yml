@@ -42,9 +42,9 @@ inputs:
     required: false
     default: '300'
   memory-budget:
-    description: Memory budget for ov scan in KB (Linux only; ignored on macOS)
+    description: Memory budget for ov scan in KB (Linux only; ignored on macOS). Default 4 GiB; the Go runtime needs ~2 GiB of virtual address space to initialize on linux_arm64, so the floor is comfortably above that.
     required: false
-    default: '1048576'
+    default: '4194304'
 outputs:
   findings-count:
     description: Total number of findings (includes baselined; subtract baselined-count for unbaselined-only)
