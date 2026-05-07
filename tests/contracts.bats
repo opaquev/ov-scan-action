@@ -946,12 +946,26 @@ BASH
     [ -f "$ENTRYPOINT_PATH" ]
     [ -f "$ACTION_YML" ] || skip "action.yml not yet present (PR #5 implements)"
 
-    # Entrypoint default — extract from the `${INPUT_MEMORY_BUDGET:-N}` form.
-    entrypoint_default="$(
-        grep -E 'INPUT_MEMORY_BUDGET:-[0-9]+' "$ENTRYPOINT_PATH" \
-            | grep -oE '[0-9]+' | head -1
+    # Entrypoint defaults — extract from EVERY `${INPUT_MEMORY_BUDGET:-N}`
+    # site. There are two (the input-validation block ~line 360 and the
+    # final invocation block ~line 613). Both must be present and equal,
+    # otherwise a future commit could bump one site but not the other and
+    # half the code path would silently keep the old default.
+    #
+    # bash 3.2 portability: mapfile is bash 4+, so we read into an array
+    # via word-splitting (defaults are integers — no whitespace risk).
+    entrypoint_default_list="$(
+        grep -oE 'INPUT_MEMORY_BUDGET:-[0-9]+' "$ENTRYPOINT_PATH" \
+            | grep -oE '[0-9]+'
     )"
+    entrypoint_default_count="$(echo "$entrypoint_default_list" | grep -c .)"
+    [ "$entrypoint_default_count" -ge 2 ]
+    entrypoint_default="$(echo "$entrypoint_default_list" | head -1)"
     [ -n "$entrypoint_default" ]
+    # Every site must equal the first one.
+    for d in $entrypoint_default_list; do
+        [ "$d" = "$entrypoint_default" ]
+    done
     [ "$entrypoint_default" -ge 2097152 ]
 
     # action.yml default — under `memory-budget:` block.
