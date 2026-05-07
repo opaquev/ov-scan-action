@@ -48,7 +48,7 @@ For the `<40-char-sha>` pin value, copy the latest commit SHA from the [opaquev/
 | `allow-binary-version` | `false` | Override binary version (refused on fork PRs). |
 | `allow-ci-baseline` | `false` | Allow baseline modifications in CI (refused on fork PRs). |
 | `time-budget` | `300` | Wallclock seconds for `ov scan` invocation. |
-| `memory-budget` | `1048576` | Memory budget in KB (Linux only; macOS no-op per `ulimit -v` semantics). |
+| `memory-budget` | `4194304` | Memory budget in KB (Linux only; macOS no-op per `ulimit -v` semantics). Default 4 GiB; do not set below ~2 GiB or the Go runtime segfaults on `linux_arm64` (OV-256). |
 
 ### Outputs
 

@@ -52,7 +52,7 @@ setup() {
     export INPUT_ALLOW_BINARY_VERSION="false"
     export INPUT_ALLOW_CI_BASELINE="false"
     export INPUT_TIME_BUDGET="300"
-    export INPUT_MEMORY_BUDGET="1048576"
+    export INPUT_MEMORY_BUDGET="4194304"
 }
 
 teardown() {
@@ -933,4 +933,37 @@ BASH
         ( exec env -i PATH=/usr/bin:/bin \"\${OV_TIMEOUT[@]}\" 1 sleep 5 ) || rc=\$?
         [ \"\$rc\" -eq 124 ]
     "
+}
+
+@test "#46 TestMemoryBudgetDefaultAboveArm64GoRuntimeFloor - OV-256 regression" {
+    # OV-256: ulimit -v 1048576 (1 GiB) segfaults the Go runtime during
+    # mheap.init on linux_arm64. The runtime needs ~2 GiB of virtual
+    # address space to initialize its arena maps. Default must stay above
+    # that floor.
+    #
+    # This test guards both the entrypoint default AND the action.yml
+    # default — they must agree, and both must be >= 2097152 (2 GiB).
+    [ -f "$ENTRYPOINT_PATH" ]
+    [ -f "$ACTION_YML" ] || skip "action.yml not yet present (PR #5 implements)"
+
+    # Entrypoint default — extract from the `${INPUT_MEMORY_BUDGET:-N}` form.
+    entrypoint_default="$(
+        grep -E 'INPUT_MEMORY_BUDGET:-[0-9]+' "$ENTRYPOINT_PATH" \
+            | grep -oE '[0-9]+' | head -1
+    )"
+    [ -n "$entrypoint_default" ]
+    [ "$entrypoint_default" -ge 2097152 ]
+
+    # action.yml default — under `memory-budget:` block.
+    yml_default="$(
+        awk '/^  memory-budget:/{flag=1} flag && /default:/{print; exit}' \
+            "$ACTION_YML" | grep -oE "'[0-9]+'" | tr -d "'"
+    )"
+    [ -n "$yml_default" ]
+    [ "$yml_default" -ge 2097152 ]
+
+    # The two must agree (otherwise composite-action env binding silently
+    # papers over a divergence between the action contract and the
+    # implementation default).
+    [ "$entrypoint_default" = "$yml_default" ]
 }

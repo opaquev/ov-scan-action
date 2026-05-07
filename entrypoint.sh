@@ -352,7 +352,12 @@ if [ -n "$INPUT_BASELINE_FILE" ]; then
 fi
 
 INPUT_TIME_BUDGET="${INPUT_TIME_BUDGET:-300}"
-INPUT_MEMORY_BUDGET="${INPUT_MEMORY_BUDGET:-1048576}"
+# Default 4 GiB. The Go runtime reserves ~2 GiB of virtual address
+# space at process startup on linux_arm64 (mheap arena maps + span
+# allocators); a tighter ulimit -v segfaults during runtime.schedinit
+# before main() runs. OV-256 confirmed: 1 GiB → SIGSEGV, 2 GiB → OK,
+# 4 GiB chosen for headroom against future Go runtime growth.
+INPUT_MEMORY_BUDGET="${INPUT_MEMORY_BUDGET:-4194304}"
 if ! [[ "$INPUT_TIME_BUDGET" =~ ^[1-9][0-9]{0,4}$ ]]; then
     echo "::error::invalid time-budget input (expect 1-99999 seconds)" >&2
     exit 2
@@ -605,7 +610,7 @@ fi
 # ulimit applies to subshell; exec env -i replaces subshell with cmd.
 # ============================================================================
 WALL_S="${INPUT_TIME_BUDGET:-300}"
-MEM_KB="${INPUT_MEMORY_BUDGET:-1048576}"
+MEM_KB="${INPUT_MEMORY_BUDGET:-4194304}"
 
 SCAN_OUT="$WORK/scan-output.json"
 
