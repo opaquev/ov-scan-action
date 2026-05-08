@@ -148,16 +148,23 @@ The helper sets sensible defaults for `GITHUB_EVENT_NAME`, `GITHUB_REPOSITORY`, 
 
 ## License
 
-Business Source License 1.1 — see [LICENSE](LICENSE). Each version converts to
-Apache License 2.0 on **2030-05-06** (four years after the v1.0.0 release).
+Business Source License 1.1 — see [LICENSE](LICENSE). All currently released
+versions (the `v1.x` series) carry Change Date **2030-05-06**, on which they
+convert to Apache License 2.0. Future major versions may carry a fresh Change
+Date if the LICENSE file is re-issued.
 
-The Additional Use Grant permits free use of this action in any CI pipeline
-(including production CI, any organization size) for the purpose of running
-`ov scan` against repositories you control. The grant does not extend to
-redistributing this action as part of a competing scanning service or
-commercial product.
+The Additional Use Grant is unusually broad for BSL: it permits production use
+of this action by any organization, regardless of size, for the sole purpose
+of invoking `ov scan` against repositories under your organization's control,
+in any Continuous Integration (CI) or local development workflow. The grant
+does not authorize use of this action as a component of a hosted scanning
+service, a competing secret-scanning product, or any other commercial offering
+whose primary function overlaps with this action or with OpaqueVault. See
+LICENSE for the precise wording.
 
 The OpaqueVault `ov` core CLI (this action's payload) is also BSL 1.1, with a
 narrower Additional Use Grant — see
 [LICENSE-FAQ.md](https://github.com/huntrock17/opaquevault/blob/main/LICENSE-FAQ.md)
-in the OpaqueVault repo for the full picture.
+in the OpaqueVault repo for the full layered analysis. The action does not
+act as a sub-licensor of `ov`; the binary you receive at runtime is licensed
+directly to you by OpaqueVault LLC.
