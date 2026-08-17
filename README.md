@@ -163,8 +163,12 @@ whose primary function overlaps with this action or with OpaqueVault. See
 LICENSE for the precise wording.
 
 The OpaqueVault `ov` core CLI (this action's payload) is also BSL 1.1, with a
-narrower Additional Use Grant — see
-[LICENSE-FAQ.md](https://github.com/huntrock17/opaquevault/blob/main/LICENSE-FAQ.md)
-in the OpaqueVault repo for the full layered analysis. The action does not
-act as a sub-licensor of `ov`; the binary you receive at runtime is licensed
-directly to you by OpaqueVault LLC.
+narrower Additional Use Grant. For plain-language guidance on what these
+licenses permit — including the relationship between this action's grant and
+the `ov` binary's grant — see the
+[OpaqueVault license guide](https://opaquevault.com/docs/license). The legal
+authority is the LICENSE text itself (this repo's [LICENSE](LICENSE), and
+[opaquevault.com/LICENSE](https://opaquevault.com/LICENSE) for `ov`); the
+guide is a guide, not a substitute. The action does not act as a sub-licensor
+of `ov`; the binary you receive at runtime is licensed directly to you by
+OpaqueVault LLC.

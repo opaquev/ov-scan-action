@@ -44,12 +44,6 @@ The Business Source License (this document, or the “License”) is not an Open
 Source license. However, the Licensed Work will eventually be made available
 under an Open Source License, as stated in this License.
 
-For plain-language guidance on what this License permits — including the
-relationship between this action's grant and the OpaqueVault `ov` binary's
-grant — see the OpaqueVault LICENSE-FAQ.md at
-https://github.com/huntrock17/opaquevault/blob/main/LICENSE-FAQ.md.
-The legal authority is this License; the FAQ is a guide, not a substitute.
-
 For more information on the use of the Business Source License generally,
 please visit the Adopting and Developing Business Source License FAQ at
 https://mariadb.com/bsl-faq-adopting.
