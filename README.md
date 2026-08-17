@@ -5,9 +5,11 @@
 
 GitHub Action that runs [`ov scan`](https://opaquevault.com/docs/scan) on your repository to find leaked secrets in the working tree and (optionally) in git history.
 
+> ⚠️ **Official source**: [`opaquev`](https://github.com/opaquev) is the **only** official GitHub org for this action and for OpaqueVault. The similarly-named `github.com/opaquevault` org is an **unrelated, unaffiliated account** — never use actions or code from it. And **pin to a commit SHA, not a tag**: the Marketplace "Use this action" snippet suggests a `@v1.0.3`-style tag pin — replace it with the release's full 40-char commit SHA (see [Pin to SHA, not tag](#pin-to-sha-not-tag)). SHA pinning authenticates immutability, not origin, so check the org spelling is `opaquev` *before* you pin.
+
 > **Status: v1.0.3 shipped** — listed on the [GitHub Marketplace](https://github.com/marketplace/actions/ov-scan). Implementation lives in this repo; security model + 6-round pre-review history is documented under [`docs/threat-model.md`](docs/threat-model.md) and the upstream OV-239 plan doc.
 
-> **Health**: the smoke badge above is the live status of the [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test) smoke suite — runs daily against the published `@v1` tag AND an immutable release SHA pin (currently `v1.0.1`'s) on `ubuntu-latest` and `macos-latest`; `ubuntu-24.04-arm` runs the version-floor cells only (the scan jobs are excluded on arm pending [OV-256](https://linear.app/thehunterfoundry/issue/OV-256)). **If the smoke badge is red, do not integrate this action until smoke is green again.**
+> **Health**: the smoke badge above is the live status of the [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test) smoke suite — runs daily against the published `@v1` tag AND an immutable release SHA pin (currently `v1.0.3`'s) on `ubuntu-latest` and `macos-latest`; `ubuntu-24.04-arm` runs the version-floor cells only (the scan jobs are excluded on arm pending [OV-256](https://linear.app/thehunterfoundry/issue/OV-256)). **If the smoke badge is red, do not integrate this action until smoke is green again.**
 
 ## Why a separate action?
 
@@ -149,10 +151,12 @@ The helper sets sensible defaults for `GITHUB_EVENT_NAME`, `GITHUB_REPOSITORY`, 
 
 ## License
 
-Business Source License 1.1 — see [LICENSE](LICENSE). All currently released
-versions (the `v1.x` series) carry Change Date **2030-05-06**, on which they
-convert to Apache License 2.0. Future major versions may carry a fresh Change
-Date if the LICENSE file is re-issued.
+Business Source License 1.1 — see [LICENSE](LICENSE). Versions **v1.0.3 and
+later** carry Change Date **2030-05-06**, on which they convert to Apache
+License 2.0. Earlier releases (`v1.0.0`–`v1.0.2`) were published under MIT and
+remain MIT at their tagged refs — the MIT grant on already-released commits is
+irrevocable and is not converted by a later Change Date. Future major versions
+may carry a fresh Change Date if the LICENSE file is re-issued.
 
 The Additional Use Grant is unusually broad for BSL: it permits production use
 of this action by any organization, regardless of size, for the sole purpose
