@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Licensor entity**: Reconciled to `OpaqueVault LLC` (was
   `The Hunter Foundry, LLC` in prior MIT LICENSE).
 
+## [v1.0.2] — 2026-05-06
+
+### Fixed
+- **linux_arm64 segfault ([OV-256](https://linear.app/thehunterfoundry/issue/OV-256))**:
+  `memory-budget` default raised from 1 GiB (`1048576` KB) to 4 GiB
+  (`4194304` KB). The Go runtime needs roughly 2 GiB of virtual address
+  space to initialize on linux_arm64, so the previous `ulimit -v` cap
+  made `ov scan` segfault at startup (exit 139, "Segmentation fault").
+  Do not set `memory-budget` below ~2 GiB.
+  ([#11](https://github.com/opaquev/ov-scan-action/pull/11))
+
 ## [v1.0.1] — 2026-05-06
 
 ### Fixed
