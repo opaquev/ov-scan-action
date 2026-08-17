@@ -9,7 +9,7 @@ GitHub Action that runs [`ov scan`](https://opaquevault.com/docs/scan) on your r
 
 > **Status: v1.0.3 shipped** — listed on the [GitHub Marketplace](https://github.com/marketplace/actions/ov-scan). Implementation lives in this repo; security model + 6-round pre-review history is documented under [`docs/threat-model.md`](docs/threat-model.md) and the upstream OV-239 plan doc.
 
-> **Health**: the smoke badge above is the live status of the [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test) smoke suite — runs daily against the published `@v1` tag AND an immutable release SHA pin (currently `v1.0.3`'s) on `ubuntu-latest` and `macos-latest`; `ubuntu-24.04-arm` runs the version-floor cells only (the scan jobs are excluded on arm pending [OV-256](https://linear.app/thehunterfoundry/issue/OV-256)). **If the smoke badge is red, do not integrate this action until smoke is green again.**
+> **Health**: the smoke badge above is the live status of the [`opaquev/ov-scan-action-integration-test`](https://github.com/opaquev/ov-scan-action-integration-test) smoke suite — runs daily against the published `@v1` tag AND an immutable release SHA pin (currently `v1.0.3`'s) on `ubuntu-latest` and `macos-latest`; `ubuntu-24.04-arm` runs the version-floor cells only (the scan cells stay excluded until a green arm validation run confirms the v1.0.2 `memory-budget` fix — [OV-256](https://linear.app/thehunterfoundry/issue/OV-256)). **If the smoke badge is red, do not integrate this action until smoke is green again.**
 
 ## Why a separate action?
 
