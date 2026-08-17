@@ -5,7 +5,7 @@ All notable changes to `opaquev/ov-scan-action` will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.0.3] — 2026-08-17
 
 ### Changed
 - **License**: Changed from MIT to Business Source License 1.1, effective
@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Licensor entity**: Reconciled to `OpaqueVault LLC` (was
   `The Hunter Foundry, LLC` in prior MIT LICENSE).
 
-## [v1.0.1] — Unreleased
+## [v1.0.1] — 2026-05-06
 
 ### Fixed
 - **First-time integration UX**: `baseline-file` default changed from
