@@ -274,7 +274,7 @@ mock_ov_bin() {
     if [ -z "$scan_json" ]; then
         scan_json='{"findings":[]}'
     fi
-    local version_text="${2:-ov version 0.10.0 (commit abc123, built 2026-05-05T00:00:00Z)}"
+    local version_text="${2:-ov version 0.20.0 (commit abc123, built 2026-09-23T00:00:00Z)}"
     local target="$TEST_TMP/bin/ov"
     {
         printf '%s\n' '#!/usr/bin/env bash'

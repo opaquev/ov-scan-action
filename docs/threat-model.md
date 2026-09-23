@@ -84,7 +84,7 @@ repo.
 (`--check-version-bounds --min-ov-version "$OV_VERSION"`) runs against
 the action's embedded `OV_VERSION` literal **before** the
 customer-supplied bounds. An attacker who replays a genuinely-signed
-older release at the v0.10.0 URL fails the floor check.
+older release at the pinned `OV_VERSION` URL fails the floor check.
 
 ## Tier 3 — Malicious AI / malicious PR
 
