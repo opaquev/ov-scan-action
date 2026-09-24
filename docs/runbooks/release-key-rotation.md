@@ -1,5 +1,5 @@
 ---
-last_drilled: 2026-05-06T00:00:00Z
+last_drilled: 2026-09-23T23:30:00Z
 ---
 
 # Release-Key Rotation Runbook
@@ -155,6 +155,34 @@ When you complete a drill (real or simulated), log it under
 - Outcome (success / partial / blocked)
 - Any deviations from this procedure
 - Updates needed to this runbook (open as a separate PR)
+
+### Drill log
+
+Newest first. One entry per drill; `last_drilled` above must match the
+newest entry.
+
+- **2026-09-23T23:30:00Z** — scheduled walk-through, no rotation, for
+  ov-scan-action v1.1.0 ([OV-542](https://linear.app/thehunterfoundry/issue/OV-542)).
+  Operator: Hunter Lemperle (custodian), with Claude Code gathering evidence.
+  Outcome: success.
+  - Pre-rotation checklist:
+    - `OV_RELEASE_PRIVATE_KEY` and its password are current. The release
+      pipeline signed ov v0.20.0-rc.3, v0.20.0-rc.4 and v0.20.0 that day,
+      and each `checksums.txt` verified with `minisign` against the
+      `required` key in `trusted-keys.txt`.
+    - `trusted-keys.txt` holds exactly one `required` key, and its SHA-256
+      equals `TRUSTED_KEYS_SHA256`.
+    - `vendor/SHA256SUMS` matches the vendored minisign binaries and the
+      `MINISIGN_BIN_SHA256_*` literals.
+  - Custodian access: the custodian confirmed an offline copy of the
+    key and password outside the GitHub secret, so "Recovery: lost
+    custodian access" does not apply.
+  - Runner verification: the v1.1.0 candidate ran against a repo with
+    seven findings on `ubuntu-24.04` and `macos-14`. `fail-on: high`
+    passed and `fail-on: low` failed, as expected, with checksums verified
+    against the required key (`huntrock17/ov-sarif-check` run 35932424299).
+  - Deviation: `linux_arm64` was not exercised, because there is no
+    hosted runner for it.
 
 ## Out-of-scope (explicitly)
 
