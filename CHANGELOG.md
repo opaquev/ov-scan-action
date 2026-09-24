@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.1.0] — 2026-09-23
+
 ### Changed
 - **Scans with ov v0.20.0 ([OV-542](https://linear.app/thehunterfoundry/issue/OV-542))**:
   the embedded `OV_VERSION` floor moves from `v0.10.0` to `v0.20.0`, so the
