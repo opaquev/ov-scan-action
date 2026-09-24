@@ -97,10 +97,10 @@ teardown() {
 }
 
 @test "#5a TestBinaryVersionOutsideRangeRefuses - lex-trap canary 0.9.5 vs 0.10.0" {
-    # Real ov v0.10.0 binary's --check-version-bounds is invoked by
+    # The real ov binary's --check-version-bounds is invoked by
     # entrypoint.sh for every scan; the action's unconditional floor
-    # (OV_VERSION="v0.10.0") rejects v0.9.5 even when customer min is
-    # empty. The lex-trap canary asserts 0.9.5 < 0.10.0 numerically.
+    # (OV_VERSION) rejects v0.9.5 even when customer min is empty. The
+    # lex-trap canary asserts 0.9.5 < 0.10.0 numerically.
     install_clean_repo
     # Stub a mock that reports version 0.9.5 (fake version-bound rejection).
     mock_ov_bin '{"findings":[]}' "ov version 0.9.5 (commit fake, built 2026-01-01T00:00:00Z)"
@@ -715,19 +715,23 @@ BASH
 # Round-5 (#38-#43) - CLI-interface + TOCTOU + replay correctness contracts
 # ===========================================================================
 
-@test "#38 TestStaleChecksumsReplayDefeated - genuine v0.9.5 artifacts at v0.10.0 URL exits 2" {
+@test "#38 TestStaleChecksumsReplayDefeated - genuine v0.9.5 artifacts at the pinned OV_VERSION URL exits 2" {
     install_clean_repo
     # Stub returns version 0.9.5 with --check-version-bounds returning
-    # non-zero against the action's pinned floor v0.10.0.
-    cat > "$TEST_TMP/bin/ov" <<'BASH'
+    # non-zero against the action's pinned floor. The floor is read from
+    # entrypoint.sh so this contract follows every OV_VERSION bump.
+    local floor
+    floor=$(sed -n 's/^readonly OV_VERSION="\(v[0-9.]*\)"$/\1/p' "$ENTRYPOINT_PATH")
+    [ -n "$floor" ]
+    cat > "$TEST_TMP/bin/ov" <<BASH
 #!/usr/bin/env bash
-case "$1" in
+case "\$1" in
     --version) echo "ov version 0.9.5 (commit fake, built 2026-01-01T00:00:00Z)"; exit 0 ;;
     --check-version-bounds)
         # Reject if any --min-ov-version arg references the floor.
         for a; do
-            case "$a" in
-                v0.10.0|0.10.0) exit 1 ;;
+            case "\$a" in
+                ${floor}|${floor#v}) exit 1 ;;
             esac
         done
         exit 0 ;;

@@ -5,6 +5,26 @@ All notable changes to `opaquev/ov-scan-action` will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Scans with ov v0.20.0 ([OV-542](https://linear.app/thehunterfoundry/issue/OV-542))**:
+  the embedded `OV_VERSION` floor moves from `v0.10.0` to `v0.20.0`, so the
+  action downloads, verifies and runs ov v0.20.0. Every earlier action
+  release ran ov v0.10.0 and none of the detector work since.
+  Expect new findings from detectors added since v0.10.0 (for example
+  `http-bearer` / `http-basic` at medium severity) and fewer false
+  positives on vendor placeholders; see the
+  [ov v0.20.0 changelog](https://github.com/huntrock17/opaquevault/blob/main/CHANGELOG.md).
+  The default `fail-on: high` is unaffected by the new medium findings.
+  A `min-ov-version` below `v0.20.0` is now redundant: the embedded floor
+  already refuses anything older.
+
+### Fixed
+- Contract test #38 (stale-checksum replay) reads the floor from
+  `entrypoint.sh` instead of hard-coding `v0.10.0`, so it keeps asserting
+  the replay defense across `OV_VERSION` bumps.
+
 ## [v1.0.3] — 2026-08-17
 
 ### Changed

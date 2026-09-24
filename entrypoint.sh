@@ -7,7 +7,7 @@ set -euo pipefail
 # ============================================================================
 # Embedded literals - bumped only on signed releases of OV + minisign.
 # ============================================================================
-readonly OV_VERSION="v0.10.0"
+readonly OV_VERSION="v0.20.0"
 readonly MINISIGN_VERSION="0.12"
 # trusted-keys.txt SHA-256 - matches the shipped trusted-keys.txt file.
 # Recomputed on every release: shasum -a 256 trusted-keys.txt
